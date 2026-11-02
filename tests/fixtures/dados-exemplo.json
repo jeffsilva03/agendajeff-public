@@ -1,0 +1,238 @@
+{
+  "fonte": "Cenário fictício de testes e demonstração. Não representa a rotina de uma pessoa.",
+  "fuso": "America/Sao_Paulo",
+  "rotina_dia_util": {
+    "acordar": "06:00",
+    "sai_para_faculdade": "15:00",
+    "aula_inicio": "17:30",
+    "aula_fim": "21:00",
+    "chega_em_casa": [
+      "23:00",
+      "23:15"
+    ]
+  },
+  "dias_de_aula": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "semestre": {
+    "inicio": "2026-07-01",
+    "fim": "2026-12-11"
+  },
+  "lembretes": [
+    "08:00",
+    "13:00",
+    "23:00"
+  ],
+  "habitos": [
+    {
+      "id": "acordar",
+      "nome": "Começar o dia"
+    },
+    {
+      "id": "tech",
+      "nome": "Estudo Tech"
+    },
+    {
+      "id": "portfolio",
+      "nome": "Praticar um projeto"
+    },
+    {
+      "id": "candidatura",
+      "nome": "Enviar candidaturas"
+    },
+    {
+      "id": "leitura",
+      "nome": "Leitura"
+    },
+    {
+      "id": "celular",
+      "nome": "Ativar modo foco"
+    },
+    {
+      "id": "ingles",
+      "nome": "Praticar inglês"
+    },
+    {
+      "id": "pausa",
+      "nome": "Pausa consciente"
+    },
+    {
+      "id": "alongamento",
+      "nome": "Alongamento"
+    },
+    {
+      "id": "passeio",
+      "nome": "Passeio",
+      "somente_domingo": true
+    }
+  ],
+  "proposta_cadeias": {
+    "dia_util": [
+      {
+        "cadeia": "Manhã",
+        "ancora": "Começar o dia",
+        "passos": [
+          {
+            "habito": "acordar",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "pausa",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos",
+            "nao_antes": "06:30"
+          },
+          {
+            "habito": "celular",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "tech",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "25 minutos (1 pomodoro)"
+          }
+        ],
+        "periodo": "manha"
+      },
+      {
+        "cadeia": "Tarde",
+        "ancora": "Intervalo do almoço",
+        "passos": [
+          {
+            "habito": "candidatura",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "portfolio",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          }
+        ],
+        "periodo": "tarde"
+      },
+      {
+        "cadeia": "Trajeto de ida",
+        "ancora": "Início do deslocamento de exemplo",
+        "passos": [
+          {
+            "habito": "ingles",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "leitura",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          }
+        ],
+        "periodo": "tarde"
+      },
+      {
+        "cadeia": "Trajeto de volta",
+        "ancora": "Fim da aula de exemplo",
+        "passos": [
+          {
+            "habito": "alongamento",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          }
+        ],
+        "periodo": "noite"
+      }
+    ],
+    "domingo": [],
+    "fim_de_semana": [
+      {
+        "cadeia": "Manhã de domingo",
+        "ancora": "Atividade de lazer",
+        "passos": [
+          {
+            "habito": "passeio",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          }
+        ],
+        "dias": [
+          0
+        ],
+        "lembrete": false
+      },
+      {
+        "cadeia": "Tarde/noite de fim de semana",
+        "ancora": "Tempo livre",
+        "passos": [
+          {
+            "habito": "pausa",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "leitura",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          },
+          {
+            "habito": "ingles",
+            "gatilho": "Depois do passo anterior",
+            "minimo": "Praticar por 5 minutos"
+          }
+        ],
+        "dias": [
+          6,
+          0
+        ]
+      }
+    ]
+  },
+  "checks": [],
+  "inicio_rastreamento": "2026-10-01",
+  "agenda": [
+    {
+      "data": "2026-10-12",
+      "titulo": "Sem aula (feriado de N. Sra. Aparecida)",
+      "tipo": "excecao_rotina"
+    },
+    {
+      "data": "2026-10-13",
+      "titulo": "Sem aula",
+      "tipo": "excecao_rotina"
+    },
+    {
+      "data": "2026-10-13",
+      "titulo": "Reunião de exemplo",
+      "tipo": "compromisso",
+      "inicio": "13:00",
+      "fim": null,
+      "local": "Sala de exemplo"
+    },
+    {
+      "recorrencia": "mensal dia 10",
+      "titulo": "Prazo: revisão mensal de exemplo",
+      "tipo": "prazo",
+      "lembretes_dias": [
+        1,
+        9
+      ],
+      "lembretes_a_partir_de": "2026-11-01"
+    }
+  ],
+  "pendencias": [],
+  "freelas": [],
+  "flexiveis": {
+    "dia_util_sem_aula": [
+      "ingles",
+      "leitura",
+      "alongamento"
+    ],
+    "fim_de_semana": [
+      "alongamento"
+    ]
+  }
+}

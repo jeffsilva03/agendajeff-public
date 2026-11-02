@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Tema por classe (next-themes). Escuro é o padrão. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-heading: var(--font-geist-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-superficie: var(--superficie);
+  --color-coluna: var(--coluna);
+  --color-feito: var(--feito);
+  --color-minimo: var(--minimo);
+  --color-pulado: var(--pulado);
+  --color-aviso: var(--aviso);
+  --color-tag-manha: var(--tag-manha);
+  --color-tag-tarde: var(--tag-tarde);
+  --color-tag-trajeto: var(--tag-trajeto);
+  --color-tag-fds: var(--tag-fds);
+  --color-tag-flex: var(--tag-flex);
+  --color-gap-falta: var(--gap-falta);
+  --color-gap-excesso: var(--gap-excesso);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* Claro (alternativo). Fundo levemente acinzentado para os cartões brancos se destacarem;
+   texto secundário e cores de status mais escuros para manter contraste AA no fundo claro. */
+:root {
+  --background: #f2f3f5;
+  --foreground: #14171c;
+  --superficie: #ffffff;
+  --coluna: #e8eaee;
+  --card: #ffffff;
+  --card-foreground: #14171c;
+  --popover: #ffffff;
+  --popover-foreground: #14171c;
+  --primary: #14171c;
+  --primary-foreground: #ffffff;
+  --secondary: #e6e8ec;
+  --secondary-foreground: #14171c;
+  --muted: #e6e8ec;
+  --muted-foreground: #525a67;
+  --accent: #e3e6eb;
+  --accent-foreground: #14171c;
+  --destructive: #c42f2f;
+  --border: #d9dde3;
+  --input: #cdd2da;
+  --ring: #4f5fe6;
+  --radius: 0.625rem;
+
+  --feito: #11703f;
+  --minimo: #87500a;
+  --pulado: #7b8391;
+  --aviso: #9e5a08;
+  --tag-manha: #c98a06;
+  --tag-tarde: #3762d6;
+  --tag-trajeto: #d4543d;
+  --tag-fds: #7c4ddb;
+  --tag-flex: #0d8a7c;
+  /* Raio-X: polaridade do gap (validado para daltonismo; o tamanho vai no comprimento da barra) */
+  --gap-falta: #d4543d;
+  --gap-excesso: #7c4ddb;
+}
+
+/* Escuro (principal) */
+.dark {
+  --background: #0d0f12;
+  --foreground: #e7e9ee;
+  --superficie: #14171c;
+  --coluna: #121418;
+  --card: #1a1e24;
+  --card-foreground: #e7e9ee;
+  --popover: #1a1e24;
+  --popover-foreground: #e7e9ee;
+  --primary: #e7e9ee;
+  --primary-foreground: #0d0f12;
+  --secondary: #1f242b;
+  --secondary-foreground: #e7e9ee;
+  --muted: #1f242b;
+  --muted-foreground: #8c95a3;
+  --accent: #232931;
+  --accent-foreground: #e7e9ee;
+  --destructive: #f2726b;
+  --border: #252a32;
+  --input: #2c323b;
+  --ring: #7c8aff;
+
+  --feito: #3ccf86;
+  --minimo: #e8b04b;
+  --pulado: #6c7482;
+  --aviso: #f0b544;
+  --tag-manha: #f2b84b;
+  --tag-tarde: #6b93f5;
+  --tag-trajeto: #f07a65;
+  --tag-fds: #a78bfa;
+  --tag-flex: #34c3b0;
+  --gap-falta: #e5654f;
+  --gap-excesso: #9b7cf2;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "cv11", "ss01";
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Tema claro: sombra discreta nos cartões arredondados (no escuro, a borda já basta). */
+:root:not(.dark) :is(.rounded-lg, .rounded-xl).bg-card {
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 1px rgb(16 24 40 / 0.03);
+}
+:root:not(.dark) .bg-coluna {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rolagem horizontal das colunas no celular, sem barra visível */
+.trilho {
+  scrollbar-width: none;
+}
+.trilho::-webkit-scrollbar {
+  display: none;
+}

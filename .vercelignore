@@ -1,0 +1,18 @@
+# O que não sobe para a Vercel: segredos, dados pessoais de referência, builds e testes locais.
+.env*
+supabase/.env
+supabase/.temp
+dados_iniciais.json
+PROMPT_CLAUDE_CODE.md
+motor_referencia.mjs
+lib/seed.ts
+lib/importar-dados.ts
+scripts
+tests
+test-results
+.next
+.next-prod
+node_modules
+tsconfig.tsbuildinfo
+APIClassroom_contexto_tecnico_integracao_AgendaJeff.md
+.next-teste

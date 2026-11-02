@@ -1,0 +1,28 @@
+{
+  "type": "AdaptiveCard",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "ColumnSet",
+      "columns": [
+        { "type": "Column", "width": "stretch", "items": [ { "type": "TextBlock", "text": "${titulo}", "weight": "Bolder", "size": "Medium", "wrap": true } ] },
+        { "type": "Column", "width": "auto", "items": [ { "type": "TextBlock", "text": "${habitos}", "weight": "Bolder", "color": "Good", "horizontalAlignment": "Right" } ] }
+      ]
+    },
+    { "type": "TextBlock", "text": "${proximo}", "spacing": "Small", "wrap": true, "isSubtle": true },
+    { "type": "TextBlock", "text": "${tarefasTitulo}", "weight": "Bolder", "spacing": "Medium", "size": "Small" },
+    { "type": "TextBlock", "$data": "${tarefas}", "text": "• ${texto}", "spacing": "None", "wrap": true, "maxLines": 1 },
+    { "type": "TextBlock", "text": "Agenda", "weight": "Bolder", "spacing": "Medium", "size": "Small" },
+    { "type": "TextBlock", "$data": "${agenda}", "text": "${texto}", "spacing": "None", "wrap": true, "maxLines": 1 },
+    { "type": "TextBlock", "text": "Metas do mês", "weight": "Bolder", "spacing": "Medium", "size": "Small", "$when": "${temMetas}" },
+    { "type": "TextBlock", "$data": "${metas}", "text": "${texto}", "spacing": "None", "wrap": true, "maxLines": 1 },
+    { "type": "TextBlock", "text": "${sequencia}", "spacing": "Medium", "size": "Small", "color": "Warning", "$when": "${sequencia != ''}" },
+    { "type": "TextBlock", "text": "${frase}", "spacing": "Medium", "wrap": true, "size": "Small", "isSubtle": true, "fontType": "Default" },
+    { "type": "TextBlock", "text": "${atualizado}", "spacing": "Small", "size": "Small", "isSubtle": true }
+  ],
+  "actions": [
+    { "type": "Action.Execute", "title": "Abrir o Hoje", "verb": "abrir" },
+    { "type": "Action.Execute", "title": "Atualizar", "verb": "atualizar" }
+  ]
+}

@@ -1,0 +1,457 @@
+openapi: 3.1.0
+info:
+  title: AgendaJeff — API de integração
+  version: "1.0.0"
+  description: |
+    API privada e somente leitura do AgendaJeff. Fuso de referência America/Sao_Paulo.
+    Datas em AAAA-MM-DD; instantes em ISO 8601 com deslocamento (ex.: 2026-10-14T13:00:00-03:00).
+    Parâmetros desconhecidos ou repetidos são recusados com 400. Detalhes em docs/API_INTEGRACAO.md.
+servers:
+  - url: https://agenda.example.com/api/integrations/agenda/v1
+  - url: http://localhost:3000/api/integrations/agenda/v1
+security:
+  - bearerAuth: []
+  - sessionCookie: []
+tags:
+  - name: dia
+  - name: faculdade
+  - name: hábitos
+  - name: carreira
+  - name: projetos
+  - name: mês
+  - name: sistema
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [sistema]
+      summary: Disponibilidade (sem dados de usuário)
+      security: []
+      responses:
+        "200":
+          description: Disponível
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: object
+                    properties:
+                      status: { type: string, const: ok }
+                      service: { type: string }
+                      apiVersion: { type: string }
+  /today:
+    get:
+      operationId: getToday
+      tags: [dia]
+      summary: Visão de um dia (lógica da tela Hoje)
+      parameters:
+        - $ref: "#/components/parameters/dateOptional"
+        - $ref: "#/components/parameters/includeNotes"
+      responses:
+        "200":
+          description: Dia resolvido
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/Today" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/ServerError" }
+  /agenda:
+    get:
+      operationId: listAgenda
+      tags: [dia]
+      summary: Agenda dia a dia num intervalo (até 62 dias)
+      parameters:
+        - $ref: "#/components/parameters/start"
+        - $ref: "#/components/parameters/end"
+      responses:
+        "200":
+          description: Dias do intervalo
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          start: { type: string, format: date }
+                          end: { type: string, format: date }
+                          days: { type: array, items: { $ref: "#/components/schemas/AgendaDay" } }
+                          totals: { type: object, additionalProperties: { type: integer } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [dia]
+      summary: Tarefas de um dia, de um intervalo ou atrasadas
+      description: Sem date nem start/end, usa hoje. overdue=true sem data lista todas as atrasadas. Recorrentes não acumulam (no intervalo, só de hoje em diante).
+      parameters:
+        - $ref: "#/components/parameters/dateOptional"
+        - { name: start, in: query, schema: { type: string, format: date } }
+        - { name: end, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { type: string, enum: [pending, done, all], default: all } }
+        - { name: overdue, in: query, schema: { type: string, enum: ["true", "false"] } }
+        - { name: important, in: query, schema: { type: string, enum: ["true", "false"] } }
+        - { name: recurring, in: query, schema: { type: string, enum: ["true", "false"] } }
+        - $ref: "#/components/parameters/includeNotes"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: Tarefas
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          scope: { type: object }
+                          today: { type: string, format: date }
+                          tasks: { type: array, items: { $ref: "#/components/schemas/Task" } }
+                          counts: { type: object, properties: { pending: { type: integer }, done: { type: integer }, overdue: { type: integer } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /college:
+    get:
+      operationId: getCollege
+      tags: [faculdade]
+      summary: Semestre, disciplinas, grade, aulas de uma data e avaliações
+      parameters:
+        - $ref: "#/components/parameters/dateOptional"
+        - { name: assessments, in: query, schema: { type: string, enum: [pending, delivered, all], default: pending } }
+        - { name: type, in: query, description: "Lista separada por vírgula", schema: { type: string, example: "prova,trabalho" } }
+        - { name: semester, in: query, schema: { type: string, enum: [current, all], default: current } }
+        - { name: include, in: query, description: "grades (notas e médias) e/ou notes (descrições; só para o próprio usuário)", schema: { type: string, example: grades } }
+      responses:
+        "200":
+          description: Dados da faculdade
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          currentSemester: { oneOf: [{ $ref: "#/components/schemas/Semester" }, { type: "null" }] }
+                          mostRecentSemester: { oneOf: [{ $ref: "#/components/schemas/Semester" }, { type: "null" }] }
+                          subjects: { type: array, items: { type: object } }
+                          weeklySchedule: { type: array, items: { type: object } }
+                          classesOnDate: { oneOf: [{ type: object }, { type: "null" }] }
+                          assessments: { type: array, items: { $ref: "#/components/schemas/Assessment" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /habits:
+    get:
+      operationId: getHabits
+      tags: [hábitos]
+      summary: Hábitos, sequências, adesão, estado numa data e histórico (até 92 dias)
+      parameters:
+        - $ref: "#/components/parameters/dateOptional"
+        - { name: start, in: query, schema: { type: string, format: date } }
+        - { name: end, in: query, schema: { type: string, format: date } }
+        - { name: habitId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Progresso dos hábitos, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [carreira]
+      summary: Candidaturas, resumo por status e próximas etapas
+      parameters:
+        - { name: status, in: query, description: "Lista: enviada,em_processo,entrevista,oferta,recusada,desisti", schema: { type: string } }
+        - { name: upcoming, in: query, schema: { type: string, enum: ["true", "false"] } }
+        - $ref: "#/components/parameters/includeNotes"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200": { description: Candidaturas, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /freelances:
+    get:
+      operationId: listFreelances
+      tags: [carreira]
+      summary: Freelas, horas, valores a receber e próximas entregas
+      parameters:
+        - { name: status, in: query, description: "Lista: proposta,em_andamento,entregue,pago,cancelado (sem filtro, cancelados ficam de fora)", schema: { type: string } }
+        - $ref: "#/components/parameters/includeNotes"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200": { description: Freelas, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projetos]
+      summary: Projetos com status, prioridade, tecnologias, próximo passo, prazo e progresso das features (geral e do MVP)
+      parameters:
+        - { name: status, in: query, description: "Lista: ideia,planejando,desenvolvendo,pausado,concluido,arquivado (sem filtro, arquivados ficam de fora)", schema: { type: string } }
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200": { description: Projetos, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projetos]
+      summary: Um projeto completo (descrição, problema, público, anotações, links, datas e features)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Projeto, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { description: Projeto não encontrado (ou de outro usuário) }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /month:
+    get:
+      operationId: getMonth
+      tags: [mês]
+      summary: Metas do mês com progresso, Raio-X da vida e revisão mensal com os números
+      parameters:
+        - { name: month, in: query, description: "AAAA-MM (até 24 meses para cada lado; padrão: o mês atual)", schema: { type: string, pattern: "^\\d{4}-(0[1-9]|1[0-2])$" } }
+      responses:
+        "200": { description: Mês, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /week:
+    get:
+      operationId: getWeek
+      tags: [dia]
+      summary: Semana consolidada (sem data, a do Planejar a semana)
+      parameters:
+        - $ref: "#/components/parameters/dateOptional"
+      responses:
+        "200": { description: Semana, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /insights:
+    get:
+      operationId: getInsights
+      tags: [hábitos]
+      summary: Análises com os limiares da tela (indisponível quando faltam dias)
+      responses:
+        "200": { description: Insights, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /search:
+    get:
+      operationId: search
+      tags: [sistema]
+      summary: Busca por título/nome (nos projetos, também resumo e features)
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 60 } }
+        - { name: categories, in: query, description: "Lista: tasks,events,habits,college,applications,freelances,projects", schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, maximum: 500, default: 0 } }
+      responses:
+        "200": { description: Resultados, content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token do Supabase Auth (sessão do usuário ou token OAuth 2.1 de um cliente autorizado).
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sb-auth-token
+      description: Cookie de sessão do próprio app (o nome real tem o identificador do projeto).
+  parameters:
+    dateOptional: { name: date, in: query, schema: { type: string, format: date } }
+    start: { name: start, in: query, required: true, schema: { type: string, format: date } }
+    end: { name: end, in: query, required: true, schema: { type: string, format: date } }
+    includeNotes: { name: include, in: query, description: "notes: inclui as anotações (liberadas para qualquer origem autorizada, inclusive OAuth)", schema: { type: string, enum: [notes] } }
+    limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+    offset: { name: offset, in: query, schema: { type: integer, minimum: 0, maximum: 5000, default: 0 } }
+  responses:
+    BadRequest: { description: Parâmetros inválidos, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    Unauthorized: { description: Sem credencial ou credencial inválida/expirada/revogada, headers: { WWW-Authenticate: { schema: { type: string } } }, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    Forbidden: { description: Integrações desligadas ou escopo insuficiente, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    NotFound: { description: Recurso não encontrado, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    TooManyRequests: { description: Limite de 60 consultas por minuto, headers: { Retry-After: { schema: { type: integer } } }, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+    ServerError: { description: Falha técnica (sem detalhes internos), content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  schemas:
+    Envelope:
+      type: object
+      required: [success, data, meta]
+      properties:
+        success: { type: boolean, const: true }
+        data: { type: object }
+        meta:
+          type: object
+          properties:
+            timezone: { type: string, const: America/Sao_Paulo }
+            generatedAt: { type: string, format: date-time }
+            source: { type: string, const: AgendaJeff }
+            apiVersion: { type: string, const: v1 }
+            requestId: { type: string, format: uuid }
+            pagination:
+              type: object
+              properties: { limit: { type: integer }, offset: { type: integer }, total: { type: integer }, hasMore: { type: boolean } }
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, const: false }
+        error:
+          type: object
+          properties:
+            code: { type: string, enum: [nao_autenticado, token_invalido, integracao_desativada, escopo_insuficiente, parametro_invalido, nao_encontrado, limite_excedido, erro_interno] }
+            message: { type: string }
+            details: { type: array, items: { type: object, properties: { param: { type: string }, message: { type: string } } } }
+        meta: { type: object, properties: { requestId: { type: string }, apiVersion: { type: string } } }
+    HabitStatus: { type: string, enum: [done, minimum, not_done, not_applicable, pending] }
+    Task:
+      type: object
+      properties:
+        id: { type: ["string", "null"], description: "null para instância de recorrente ainda não concluída" }
+        recurringTaskId: { type: ["string", "null"] }
+        title: { type: string }
+        date: { type: string, format: date }
+        time: { type: ["string", "null"], example: "15:00" }
+        dateTime: { type: ["string", "null"], format: date-time }
+        important: { type: boolean }
+        recurring: { type: boolean }
+        status: { type: string, enum: [pending, done] }
+        completedAt: { type: ["string", "null"], format: date-time }
+        overdue: { type: boolean }
+        overdueSince: { type: ["string", "null"], format: date }
+        notes: { type: ["string", "null"], description: "Só com include=notes (próprio usuário)" }
+    Event:
+      type: object
+      properties:
+        source: { type: string, enum: [event, freelance, college, application] }
+        sourceId: { type: string }
+        title: { type: string }
+        date: { type: string, format: date }
+        startTime: { type: ["string", "null"] }
+        endTime: { type: ["string", "null"] }
+        start: { type: ["string", "null"], format: date-time }
+        end: { type: ["string", "null"], format: date-time }
+        location: { type: ["string", "null"] }
+    Deadline:
+      type: object
+      properties:
+        source: { type: string, enum: [event, freelance, college, application] }
+        sourceId: { type: string }
+        title: { type: string }
+        kind: { type: string, enum: [deadline, reminder] }
+        date: { type: string, format: date }
+        dueDate: { type: string, format: date }
+        daysUntilDue: { type: integer }
+    ClassItem:
+      type: object
+      properties:
+        subjectId: { type: string }
+        subject: { type: string }
+        weekday: { type: string }
+        startTime: { type: string }
+        endTime: { type: string }
+        room: { type: ["string", "null"] }
+        professor: { type: ["string", "null"] }
+    AgendaDay:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        weekday: { type: string }
+        classDay: { type: object, properties: { isClassDay: { type: boolean }, hasClass: { type: boolean }, noClassReason: { type: ["string", "null"] } } }
+        holiday: { type: ["string", "null"] }
+        classes: { type: array, items: { $ref: "#/components/schemas/ClassItem" } }
+        events: { type: array, items: { $ref: "#/components/schemas/Event" } }
+        deadlines: { type: array, items: { $ref: "#/components/schemas/Deadline" } }
+        conflicts: { type: array, items: { type: object, properties: { chainId: { type: string }, eventId: { type: string }, message: { type: string } } } }
+    Today:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        weekday: { type: string }
+        isToday: { type: boolean }
+        localTime: { type: ["string", "null"] }
+        trackingStarted: { type: ["boolean", "null"] }
+        classDay: { type: object }
+        classes: { type: array, items: { $ref: "#/components/schemas/ClassItem" } }
+        events: { type: array, items: { $ref: "#/components/schemas/Event" } }
+        deadlinesToday: { type: array, items: { $ref: "#/components/schemas/Deadline" } }
+        upcomingDeadlines: { type: array, items: { $ref: "#/components/schemas/Deadline" } }
+        conflicts: { type: array, items: { type: object } }
+        habits:
+          type: object
+          properties:
+            chains: { type: array, items: { type: object } }
+            flexible: { type: array, items: { type: object, properties: { habitId: { type: string }, name: { type: string }, status: { $ref: "#/components/schemas/HabitStatus" } } } }
+            current: { type: ["object", "null"] }
+            summary: { type: object }
+        tasks:
+          type: object
+          properties:
+            pending: { type: array, items: { $ref: "#/components/schemas/Task" } }
+            overdue: { type: array, items: { $ref: "#/components/schemas/Task" } }
+            done: { type: array, items: { $ref: "#/components/schemas/Task" } }
+    Semester:
+      type: object
+      properties: { id: { type: string }, name: { type: string }, start: { type: string, format: date }, end: { type: string, format: date } }
+    Assessment:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [prova, trabalho, atividade] }
+        title: { type: string }
+        subject: { type: ["string", "null"] }
+        date: { type: string, format: date }
+        time: { type: ["string", "null"] }
+        daysLeft: { type: integer }
+        status: { type: string, enum: [pending, pending_past_due, delivered] }
+        grade: { type: ["number", "null"], description: "Só com include=grades" }
